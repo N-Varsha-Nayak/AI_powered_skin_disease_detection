@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skin Disease Detection</title>
+    <script src="{{ url_for('static', filename='js/chatgpt.js') }}"></script>
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #003366;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 100px 20px 60px;
+            background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+        }
+
+        .hero img {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+
+        .hero h2 {
+            font-size: 36px;
+            color: #003366;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        .cta-button {
+            background-color: #ff5e42;
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .cta-button:hover {
+            background-color: #e04c33;
+        }
+
+        /* Common Section Style */
+        .section {
+            background-color: white;
+            padding: 50px 30px;
+            text-align: center;
+        }
+
+        .section h3 {
+            font-size: 28px;
+            color: #003366;
+            margin-bottom: 20px;
+        }
+
+        .section p {
+            font-size: 18px;
+            color: #555;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 8% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {transform: translateY(-50px); opacity: 0;}
+            to {transform: translateY(0); opacity: 1;}
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #003366;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #003366;
+            text-align: center;
+        }
+
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .modal-content input,
+        .modal-content select,
+        .modal-content button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .modal-content button {
+            background-color: #003366;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .modal-content button:hover {
+            background-color: #005599;
+        }
+
+        /* ChatGPT Chat Interface Styles */
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h4 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .chat-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-message {
+            align-items: flex-end;
+        }
+
+        .ai-message {
+            align-items: flex-start;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 15px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .user-message .message-content {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+        }
+
+        .quick-questions {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .quick-questions h5 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .question-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .question-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+            transform: translateY(-1px);
+        }
+
+        .chat-input-container {
+            display: flex;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #003366;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>SkinDetect AI</h1>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#about">About</a>
+            <a href="#howitworks">How It Works</a>
+            <a href="#faq">FAQ</a>
+        </div>
+    </div>
+    <div class="hero">
+        <img src="https://cdn-icons-png.flaticon.com/512/3774/3774299.png" alt="Skin AI">
+        <h2>AI-Powered Skin Disease Detection</h2>
+        <p>Get Instant Results & Medical Guidance</p>
+        <a href="#" class="cta-button" id="openModalBtn">Upload an Image & Start Diagnosis</a>
+    </div>
+     <!-- About Section -->
+     <div class="section" id="about">
+        <h3>About SkinDetect AI</h3>
+        <p>
+            SkinDetect AI is an advanced tool that uses deep learning to detect and classify various skin diseases from images. 
+            Whether you're a concerned individual, a medical student, or a dermatologist, our platform offers a quick, intelligent, and accessible way to identify potential skin issues. 
+            The system is trained on thousands of dermatological images and uses state-of-the-art AI models for accurate predictions.
+        </p>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="section" id="howitworks">
+        <h3>How It Works</h3>
+        <p>
+            Using SkinDetect AI is simple and quick:
+            <br><br>
+            1. Click the "Upload an Image & Start Diagnosis" button.<br>
+            2. Enter your basic details like Name, Age, and Gender.<br>
+            3. Upload a clear image of the skin area you want analyzed.<br>
+            4. Click Submit — our AI will scan the image and provide a likely diagnosis and recommendations.
+            <br><br>
+            📷 Please ensure the image is well-lit, focused, and only contains the affected skin region for the most accurate results.
+        </p>
+    </div>
+<!-- Placeholder for FAQ -->
+<div class="section" id="faq">
+    <h3>FAQ</h3>
+    <p>
+        Coming soon: Frequently Asked Questions to help guide your experience with SkinDetect AI.
+    </p>
+</div>
+
+<!-- Modal Upload Form -->
+<div id="uploadModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeModalBtn">&times;</span>
+        <h2>Enter Your Details</h2>
+        <form action="/predict" method="POST" enctype="multipart/form-data">
+                <input type="text" name="name" placeholder="Your Name" required>
+                <input type="number" name="age" placeholder="Your Age" required>
+                <select name="gender" required>
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+                <div class="tooltip">Please upload a clear image of the affected skin area. Ensure the image is focused and well-lit for accurate detection.</div>
+
+                <!-- Upload or capture toggle -->
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <button type="button" id="useFileBtn" class="cta-button" style="padding:8px 14px; border-radius:8px;">Use File</button>
+                    <button type="button" id="useCameraBtn" class="cta-button" style="padding:8px 14px; border-radius:8px;">Use Camera</button>
+                </div>
+
+                <!-- File input (hidden by default; shown when "Use File" is clicked) -->
+                <input type="file" name="image" accept="image/*" id="imageInput" style="margin-top:10px; display:none;">
+
+                <!-- Camera capture UI -->
+                <div id="cameraContainer" style="display:none; margin-top:10px; text-align:center;">
+                    <video id="video" autoplay playsinline style="width:100%; max-height:240px; border-radius:8px; border:2px solid #e0e0e0;"></video>
+                    <div style="margin-top:8px; display:flex; gap:10px; justify-content:center;">
+                        <button type="button" id="captureBtn" style="padding:8px 14px;">Capture</button>
+                        <button type="button" id="retakeBtn" style="padding:8px 14px; display:none;">Retake</button>
+                    </div>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    <input type="hidden" name="captured_image" id="capturedInput">
+                </div>
+
+                <!-- Image preview container -->
+                <div id="imagePreview" style="display: none; margin: 15px 0; text-align: center;">
+                    <img id="previewImg" src="" alt="Image Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                </div>
+
+                <button type="submit">Predict</button>
+        </form>
+    </div>
+</div>
+
+<!-- ChatGPT AI Assistant Section -->
+<div class="section" style="background-color: #f8f9fa;">
+    <div class="container">
+        <h3>🤖 AI Skin Health Assistant</h3>
+        <p style="margin-bottom: 30px; color: #666;">Ask questions about skin conditions, get general advice, and learn more about skin health. Remember, this is for educational purposes only - always consult a healthcare provider for medical concerns.</p>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h4>💬 Chat with AI Assistant</h4>
+                <div class="chat-controls">
+                    <button type="button" class="chat-btn" onclick="showQuickQuestions()">Quick Questions</button>
+                    <button type="button" class="chat-btn" onclick="clearChat()">Clear Chat</button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">
+                    <div class="message-content">
+                        <strong>AI Assistant:</strong> Hello! I'm here to help you learn about skin health and answer general questions. I can explain skin conditions, provide care tips, and answer questions about dermatology. What would you like to know?
+                        <br><br>
+                        <em>Remember: I provide educational information only, not medical advice. Always consult a healthcare provider for medical concerns.</em>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quick-questions" id="quickQuestions" style="display: none;">
+                <h5>Quick Questions:</h5>
+                <div class="question-buttons">
+                    <button class="question-btn" onclick="askQuestion('What are the common causes of acne?')">Acne causes</button>
+                    <button class="question-btn" onclick="askQuestion('How to protect skin from sun damage?')">Sun protection</button>
+                    <button class="question-btn" onclick="askQuestion('What are signs of skin cancer?')">Skin cancer signs</button>
+                    <button class="question-btn" onclick="askQuestion('How to treat dry skin?')">Dry skin treatment</button>
+                    <button class="question-btn" onclick="askQuestion('What is eczema and how to manage it?')">Eczema management</button>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="Ask about skin health, conditions, or care tips..." class="chat-input">
+                <button type="button" onclick="sendMessage()" class="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    &copy; 2025 SkinDetect AI. All rights reserved.
+</div>
+    <script>
+        const modal = document.getElementById("uploadModal");
+        const openBtn = document.getElementById("openModalBtn");
+        const closeBtn = document.getElementById("closeModalBtn");
+        const imageInput = document.getElementById("imageInput");
+        const imagePreview = document.getElementById("imagePreview");
+        const previewImg = document.getElementById("previewImg");
+
+        // Camera elements
+        const useFileBtn = document.getElementById('useFileBtn');
+        const useCameraBtn = document.getElementById('useCameraBtn');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const capturedInput = document.getElementById('capturedInput');
+        let mediaStream = null;
+
+        openBtn.onclick = function () {
+            modal.style.display = "block";
+        }
+
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+            // Clear image preview when closing modal
+            imagePreview.style.display = "none";
+            previewImg.src = "";
+            imageInput.value = "";
+            stopCamera();
+            cameraContainer.style.display = 'none';
+            capturedInput.value = '';
+            retakeBtn.style.display = 'none';
+            captureBtn.style.display = 'inline-block';
+        }
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+                // Clear image preview when closing modal
+                imagePreview.style.display = "none";
+                previewImg.src = "";
+                imageInput.value = "";
+                stopCamera();
+                cameraContainer.style.display = 'none';
+                capturedInput.value = '';
+                retakeBtn.style.display = 'none';
+                captureBtn.style.display = 'inline-block';
+            }
+        }
+
+        // Handle image file selection
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Warn if file > 10MB
+                const tenMB = 10 * 1024 * 1024;
+                if (file.size > tenMB) {
+                    alert('Selected file is larger than 10MB and may be rejected. Consider using the Camera option or a smaller image.');
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    imagePreview.style.display = "block";
+                    // Clear captured image if any
+                    capturedInput.value = '';
+                    stopCamera();
+                    cameraContainer.style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = "none";
+                previewImg.src = "";
+            }
+        });
+
+        // Toggle to file upload
+        useFileBtn.addEventListener('click', () => {
+            imageInput.style.display = 'block';
+            cameraContainer.style.display = 'none';
+            stopCamera();
+            // Reset camera-related state and preview
+            capturedInput.value = '';
+            imagePreview.style.display = 'none';
+            previewImg.src = '';
+        });
+
+        // Toggle to camera
+        useCameraBtn.addEventListener('click', async () => {
+            imageInput.style.display = 'none';
+            imageInput.value = '';
+            imagePreview.style.display = 'none';
+            previewImg.src = '';
+            capturedInput.value = '';
+            cameraContainer.style.display = 'block';
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = mediaStream;
+            } catch (err) {
+                alert('Could not access camera. Please allow permission or use file upload.');
+                cameraContainer.style.display = 'none';
+            }
+        });
+
+        // Capture frame with downscale and JPEG compression
+        captureBtn.addEventListener('click', () => {
+            const vw = video.videoWidth || 640;
+            const vh = video.videoHeight || 480;
+            // Constrain longest side to 1024 to keep payload small
+            const maxSide = 1024;
+            let width = vw;
+            let height = vh;
+            if (Math.max(vw, vh) > maxSide) {
+                if (vw >= vh) {
+                    width = maxSide;
+                    height = Math.round((vh / vw) * maxSide);
+                } else {
+                    height = maxSide;
+                    width = Math.round((vw / vh) * maxSide);
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, width, height);
+            // Use JPEG at 0.8 quality to reduce size vs PNG
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            capturedInput.value = dataUrl;
+            previewImg.src = dataUrl;
+            imagePreview.style.display = 'block';
+            // Pause stream to freeze frame
+            if (video.srcObject) {
+                video.pause?.();
+            }
+            retakeBtn.style.display = 'inline-block';
+            captureBtn.style.display = 'none';
+        });
+
+        // Retake
+        retakeBtn.addEventListener('click', () => {
+            capturedInput.value = '';
+            imagePreview.style.display = 'none';
+            previewImg.src = '';
+            captureBtn.style.display = 'inline-block';
+            retakeBtn.style.display = 'none';
+            if (mediaStream) {
+                video.srcObject = mediaStream;
+                video.play?.();
+            }
+        });
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+        }
+    </script>
+</body>
+</html>

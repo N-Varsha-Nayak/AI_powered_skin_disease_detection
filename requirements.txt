@@ -1,0 +1,8 @@
+flask
+tensorflow
+numpy
+opencv-python
+xhtml2pdf
+werkzeug
+openai
+python-dotenv 
