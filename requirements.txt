@@ -5,4 +5,3 @@ opencv-python-headless
 Pillow
 Werkzeug
 gunicorn
-xhtml2pdf
