@@ -1,3 +1,4 @@
+app.py :
 import os
 import base64
 from flask import Flask, render_template, request, send_file
@@ -7,7 +8,7 @@ from tensorflow.keras.applications.resnet50 import preprocess_input
 from tensorflow.keras.preprocessing import image
 import numpy as np
 import cv2
-from fpdf import FPDF
+from xhtml2pdf import pisa
 from datetime import datetime
 import io
 
@@ -60,51 +61,12 @@ def process_image(image_path):
     x = preprocess_input(x)
     return x
 
-def create_pdf(data):
-    pdf = FPDF()
-    pdf.add_page()
-
-    # Title
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "Skin Disease Diagnosis Report", ln=True, align="C")
-
-    pdf.ln(8)
-    pdf.set_font("Arial", size=12)
-
-    # Patient info
-    pdf.cell(0, 10, f"Name: {data['name']}", ln=True)
-    pdf.cell(0, 10, f"Age: {data['age']}", ln=True)
-    pdf.cell(0, 10, f"Gender: {data['gender']}", ln=True)
-    pdf.cell(0, 10, f"Date: {data['date']}", ln=True)
-
-    pdf.ln(5)
-
-    # Prediction results
-    pdf.cell(0, 10, f"Predicted Disease: {data['predicted_class']}", ln=True)
-    pdf.cell(0, 10, f"Confidence: {data['confidence']}", ln=True)
-
-    pdf.ln(10)
-
-    # Original Image
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(0, 8, "Uploaded Image:", ln=True)
-    try:
-        pdf.image(data['image_path'], w=80)
-    except:
-        pdf.cell(0, 8, "Error loading image.", ln=True)
-
-    pdf.ln(10)
-
-    # Grad-CAM Image
-    pdf.cell(0, 8, "Grad-CAM Heatmap:", ln=True)
-    try:
-        pdf.image(data['gradcam_path'], w=80)
-    except:
-        pdf.cell(0, 8, "Error loading heatmap.", ln=True)
-
-    # Return PDF bytes
-    pdf_bytes = pdf.output(dest="S").encode("latin-1")
-    return io.BytesIO(pdf_bytes)
+def create_pdf(data, template_name):
+    html = render_template(template_name, **data)
+    pdf = io.BytesIO()
+    pisa.CreatePDF(html, dest=pdf)
+    pdf.seek(0)
+    return pdf
 
 @app.route('/')
 def home():
