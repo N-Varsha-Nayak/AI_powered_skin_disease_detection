@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skin Disease Analysis Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .image-container img {
+            max-width: 45%;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .urgent {
+            color: red;
+            font-weight: bold;
+        }
+        .fw-bold {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Skin Disease Analysis Report</h1>
+        <p>Generated on: {{ date }}</p>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Patient Information</h2>
+        <table>
+            <tr>
+                <th>Name</th>
+                <td>{{ name }}</td>
+            </tr>
+            <tr>
+                <th>Age</th>
+                <td>{{ age }}</td>
+            </tr>
+            <tr>
+                <th>Gender</th>
+                <td>{{ gender }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Analysis Results</h2>
+        <table>
+            <tr>
+                <th>Predicted Condition</th>
+                <td>{{ predicted_class }}</td>
+            </tr>
+            <tr>
+                <th>Confidence Score</th>
+                <td>{{ confidence }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Image Analysis</h2>
+        <div class="image-container">
+            <img src="{{ image_path }}" width="350" height="350" alt="Original Image">
+            <img src="{{ gradcam_path }}" width="350" height="350" alt="Grad-CAM Visualization">
+        </div>
+    </div>
+    <br><br>
+    <div class="section">
+        <h2 class="section-title">Recommendations</h2>
+        {% if predicted_class == 'Acne and Rosacea Photos' %}
+        <p class="fw-bold">For Acne and Rosacea Management:</p>
+        <ul>
+            <li>Keep skin clean with gentle, non-comedogenic cleansers</li>
+            <li>Avoid known triggers (spicy foods, alcohol, extreme temperatures)</li>
+            <li>Use broad-spectrum sunscreen daily (SPF 30+)</li>
+            <li>Consider prescription medications like topical antibiotics or retinoids</li>
+            <li>Avoid touching or picking at affected areas</li>
+            <li>Use lukewarm water for washing</li>
+            <li>Consult a dermatologist for proper treatment plan</li>
+        </ul>
+        {% elif predicted_class == 'Eczema Photos' %}
+        <p class="fw-bold">For Eczema Management:</p>
+        <ul>
+            <li>Moisturize skin multiple times daily with fragrance-free emollients</li>
+            <li>Use gentle, hypoallergenic skincare products</li>
+            <li>Avoid known triggers (certain fabrics, soaps, detergents)</li>
+            <li>Take lukewarm (not hot) showers or baths</li>
+            <li>Use a humidifier in dry environments</li>
+            <li>Apply moisturizer immediately after bathing</li>
+            <li>Consider prescribed topical corticosteroids when flaring</li>
+        </ul>
+        {% elif predicted_class == 'Melanoma Skin Cancer Nevi and Moles' %}
+        <p class="urgent">URGENT: Potential Melanoma Detected</p>
+        <ul>
+            <li>Schedule an immediate appointment with a dermatologist</li>
+            <li>Document any changes in the mole/lesion (size, color, shape)</li>
+            <li>Take clear photos for monitoring changes</li>
+            <li>Avoid sun exposure to the area</li>
+            <li>Use high SPF sunscreen and protective clothing</li>
+            <li>Learn the ABCDE rule for melanoma detection</li>
+            <li>This requires professional medical evaluation ASAP</li>
+        </ul>
+        {% elif predicted_class == 'Hair Loss Photos Alopecia and other Hair Diseases' %}
+        <p class="fw-bold">For Hair Loss Management:</p>
+        <ul>
+            <li>Avoid harsh hair treatments and tight hairstyles</li>
+            <li>Use gentle, sulfate-free shampoos</li>
+            <li>Consider supplements (after consulting healthcare provider)</li>
+            <li>Protect scalp from sun exposure</li>
+            <li>Maintain a healthy, balanced diet</li>
+            <li>Reduce stress through lifestyle changes</li>
+            <li>Consult a dermatologist for treatment options (including topical medications or PRP)</li>
+        </ul>
+        {% elif predicted_class == 'Psoriasis pictures Lichen Planus and related diseases' %}
+        <p class="fw-bold">For Psoriasis / Lichen Planus Management:</p>
+        <ul>
+            <li>Keep skin well-moisturized with thick creams or ointments</li>
+            <li>Use medicated shampoos for scalp involvement</li>
+            <li>Consider phototherapy treatment</li>
+            <li>Avoid skin injury and friction</li>
+            <li>Manage stress through relaxation techniques</li>
+            <li>Use prescribed topical treatments consistently</li>
+            <li>Regular follow-up with dermatologist recommended</li>
+        </ul>
+        {% else %}
+        <p class="fw-bold">General Skin Care Recommendations:</p>
+        <ul>
+            <li>Continue regular skin care routine</li>
+            <li>Use sun protection daily</li>
+            <li>Monitor any changes in skin condition</li>
+            <li>Maintain good general skin hygiene</li>
+            <li>Consult a healthcare provider for persistent concerns</li>
+        </ul>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>This report is generated automatically and should be reviewed by a healthcare professional. 
+        It is not intended to replace professional medical advice, diagnosis, or treatment.</p>
+    </div>
+</body>
+</html>

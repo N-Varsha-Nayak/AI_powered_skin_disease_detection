@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skin Disease Detection</title>
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;}
+        html {scroll-behavior:smooth;}
+        body {font-family:'Segoe UI',sans-serif;background:#f4f6f9;color:#333;}
+        .navbar {background:#003366;color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;}
+        .navbar h1 {font-size:24px;}
+        .nav-links a {color:#fff;text-decoration:none;margin-left:20px;font-weight:500;}
+        .nav-links a:hover {text-decoration:underline;}
+        .hero {text-align:center;padding:100px 20px 60px;background:linear-gradient(to right,#f0f8ff,#e6f2ff);}
+        .hero img {width:100px;margin-bottom:20px;}
+        .hero h2 {font-size:36px;color:#003366;margin-bottom:15px;}
+        .hero p {font-size:18px;margin-bottom:30px;color:#555;}
+        .cta-button {background:#ff5e42;color:#fff;padding:14px 28px;border:none;border-radius:25px;font-size:16px;text-decoration:none;transition:.3s;cursor:pointer;}
+        .cta-button:hover {background:#e04c33;}
+        .section {background:#fff;padding:50px 30px;text-align:center;}
+        .section h3 {font-size:28px;color:#003366;margin-bottom:20px;}
+        .section p {font-size:18px;color:#555;max-width:800px;margin:auto;}
+        .modal {display:none;position:fixed;z-index:999;left:0;top:0;width:100%;height:100%;overflow:auto;background:rgba(0,0,0,.6);}
+        .modal-content {background:#fff;margin:8% auto;padding:30px;border-radius:10px;width:90%;max-width:500px;box-shadow:0 5px 20px rgba(0,0,0,.3);animation:slideIn .4s ease-out;}
+        @keyframes slideIn {from{transform:translateY(-50px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+        .close {float:right;font-size:28px;font-weight:bold;cursor:pointer;color:#003366;}
+        .modal-content h2 {margin-top:0;color:#003366;text-align:center;}
+        .modal-content form {display:flex;flex-direction:column;gap:15px;margin-top:20px;}
+        .modal-content input,.modal-content select,.modal-content button {padding:10px;font-size:16px;border-radius:5px;border:1px solid #ccc;}
+        .modal-content button {background:#003366;color:#fff;border:none;cursor:pointer;transition:.3s;}
+        .modal-content button:hover {background:#005599;}
+        .footer {background:#003366;color:#fff;text-align:center;padding:15px;font-size:14px;margin-top:50px;}
+        .option-buttons {display:flex;gap:10px;justify-content:center;}
+        .small-btn {padding:8px 14px;border-radius:8px;}
+        #cameraContainer video {width:100%;max-height:240px;border-radius:8px;border:2px solid #e0e0e0;}
+        #cameraContainer div {margin-top:8px;display:flex;gap:10px;justify-content:center;}
+        #imagePreview img {max-width:100%;max-height:200px;border-radius:8px;border:2px solid #e0e0e0;}
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>SkinDetect AI</h1>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#about">About</a>
+            <a href="#howitworks">How It Works</a>
+        </div>
+    </div>
+    <div class="hero">
+        <img src="https://cdn-icons-png.flaticon.com/512/3774/3774299.png" alt="Skin AI">
+        <h2>AI-Powered Skin Disease Detection</h2>
+        <p>Get Instant Results & Medical Guidance</p>
+        <a href="#" class="cta-button" id="openModalBtn">Upload an Image & Start Diagnosis</a>
+    </div>
+    <div class="section" id="about">
+        <h3>About SkinDetect AI</h3>
+        <p>
+            SkinDetect AI is an advanced tool that uses deep learning to detect and classify various skin diseases from images. 
+            Whether you're a concerned individual, a medical student, or a dermatologist, our platform offers a quick, intelligent, and accessible way to identify potential skin issues. 
+            The system is trained on thousands of dermatological images and uses state-of-the-art AI models for accurate predictions.
+        </p>
+    </div>
+    <div class="section" id="howitworks">
+        <h3>How It Works</h3>
+        <p>
+            Using SkinDetect AI is simple and quick:
+            <br><br>
+            1. Click the "Upload an Image & Start Diagnosis" button.<br>
+            2. Enter your basic details like Name, Age, and Gender.<br>
+            3. Upload a clear image of the skin area you want analyzed.<br>
+            4. Click Submit — our AI will scan the image and provide a likely diagnosis and recommendations.
+            <br><br>
+            📷 Please ensure the image is well-lit, focused, and only contains the affected skin region for the most accurate results.
+        </p>
+    </div>
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeModalBtn">&times;</span>
+            <h2>Enter Your Details</h2>
+            <form action="/predict" method="POST" enctype="multipart/form-data">
+                <input type="text" name="name" placeholder="Your Name" required>
+                <input type="number" name="age" placeholder="Your Age" required>
+                <select name="gender" required>
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+                <div class="tooltip">Please upload a clear image of the affected skin area. Ensure the image is focused and well-lit for accurate detection.</div>
+                <div class="option-buttons">
+                    <button type="button" id="useFileBtn" class="cta-button small-btn">Use File</button>
+                    <button type="button" id="useCameraBtn" class="cta-button small-btn">Use Camera</button>
+                </div>
+                <input type="file" name="image" accept="image/*" id="imageInput" style="display:none;">
+                <div id="cameraContainer" style="display:none;text-align:center;">
+                    <video id="video" autoplay playsinline></video>
+                    <div>
+                        <button type="button" id="captureBtn" class="small-btn">Capture</button>
+                        <button type="button" id="retakeBtn" class="small-btn" style="display:none;">Retake</button>
+                    </div>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    <input type="hidden" name="captured_image" id="capturedInput">
+                </div>
+                <div id="imagePreview" style="display:none;margin:15px 0;text-align:center;">
+                    <img id="previewImg" src="" alt="Image Preview">
+                </div>
+                <button type="submit">Predict</button>
+            </form>
+        </div>
+    </div>
+    <div class="footer">
+        &copy; 2025 SkinDetect AI. All rights reserved.
+    </div>
+    <script>
+        const modal=document.getElementById("uploadModal");
+        const openBtn=document.getElementById("openModalBtn");
+        const closeBtn=document.getElementById("closeModalBtn");
+        const imageInput=document.getElementById("imageInput");
+        const imagePreview=document.getElementById("imagePreview");
+        const previewImg=document.getElementById("previewImg");
+        const useFileBtn=document.getElementById('useFileBtn');
+        const useCameraBtn=document.getElementById('useCameraBtn');
+        const cameraContainer=document.getElementById('cameraContainer');
+        const video=document.getElementById('video');
+        const canvas=document.getElementById('canvas');
+        const captureBtn=document.getElementById('captureBtn');
+        const retakeBtn=document.getElementById('retakeBtn');
+        const capturedInput=document.getElementById('capturedInput');
+        let mediaStream=null;
+
+        function resetForm(){
+            imagePreview.style.display="none";
+            previewImg.src="";
+            imageInput.value="";
+            stopCamera();
+            cameraContainer.style.display='none';
+            capturedInput.value='';
+            retakeBtn.style.display='none';
+            captureBtn.style.display='inline-block';
+        }
+
+        openBtn.onclick=()=>modal.style.display="block";
+        closeBtn.onclick=()=>{modal.style.display="none";resetForm();};
+        window.onclick=e=>{if(e.target==modal){modal.style.display="none";resetForm();}};
+
+        imageInput.addEventListener('change',e=>{
+            const file=e.target.files[0];
+            if(file){
+                if(file.size>10*1024*1024) alert('Selected file is larger than 10MB.');
+                const reader=new FileReader();
+                reader.onload=x=>{
+                    previewImg.src=x.target.result;
+                    imagePreview.style.display="block";
+                    capturedInput.value='';
+                    stopCamera();
+                    cameraContainer.style.display='none';
+                }
+                reader.readAsDataURL(file);
+            }else resetForm();
+        });
+
+        useFileBtn.onclick=()=>{
+            imageInput.style.display='block';
+            cameraContainer.style.display='none';
+            stopCamera();
+            resetForm();
+        };
+
+        useCameraBtn.onclick=async()=>{
+            imageInput.style.display='none';
+            imageInput.value='';
+            resetForm();
+            cameraContainer.style.display='block';
+            try{
+                mediaStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+                video.srcObject=mediaStream;
+            }catch(err){
+                alert('Could not access camera.');
+                cameraContainer.style.display='none';
+            }
+        };
+
+        captureBtn.onclick=()=>{
+            const vw=video.videoWidth||640,vh=video.videoHeight||480,maxSide=1024;
+            let width=vw,height=vh;
+            if(Math.max(vw,vh)>maxSide){
+                if(vw>=vh){width=maxSide;height=Math.round((vh/vw)*maxSide);}
+                else{height=maxSide;width=Math.round((vw/vh)*maxSide);}
+            }
+            canvas.width=width;canvas.height=height;
+            canvas.getContext('2d').drawImage(video,0,0,width,height);
+            const dataUrl=canvas.toDataURL('image/jpeg',0.8);
+            capturedInput.value=dataUrl;
+            previewImg.src=dataUrl;
+            imagePreview.style.display='block';
+            video.pause();
+            retakeBtn.style.display='inline-block';
+            captureBtn.style.display='none';
+        };
+
+        retakeBtn.onclick=()=>{
+            capturedInput.value='';
+            imagePreview.style.display='none';
+            previewImg.src='';
+            captureBtn.style.display='inline-block';
+            retakeBtn.style.display='none';
+            if(mediaStream){video.srcObject=mediaStream;video.play();}
+        };
+
+        function stopCamera(){
+            if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null;}
+        }
+    </script>
+</body>
+</html>
